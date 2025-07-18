@@ -12,7 +12,7 @@ export default function ChatMessages({ messages }: Props) {
         <MessageBubble
           key={index}
           sender={msg.sender}
-          text={msg.text}
+          text={msg.text.replace(/\\\((.*?)\\\)/g, "$1")}
           time={msg.time}
           date={msg.date}
         />

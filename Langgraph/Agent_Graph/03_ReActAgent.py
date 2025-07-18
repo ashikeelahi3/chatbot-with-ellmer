@@ -42,16 +42,18 @@ def model_call(state:AgentState) -> AgentState:
     system_prompt = SystemMessage(content=
         "You are my AI assistant, please answer my query to the best of your ability."
     )
-    response = model.invoke([system_prompt] + state["messages"])
+    response = model.invoke([system_prompt] + list(state["messages"]))
     return {"messages": [response]}
+
+from langchain_core.messages import AIMessage
 
 def should_continue(state: AgentState):
   messages = state["messages"]
   last_message = messages[-1]
-  if not last_message.tool_calls:
-    return "end"
-  else:
+  if isinstance(last_message, AIMessage) and getattr(last_message, "tool_calls", None):
     return "continue"
+  else:
+    return "end"
 
 graph = StateGraph(AgentState)
 graph.add_node("our_agent", model_call)
@@ -82,5 +84,7 @@ def print_stream(stream):
     else:
       message.pretty_print()
 
-inputs = {"messages": [{"user", "Add 40 + 12"}]}  
-print_stream(app.stream(inputs, stream_mode="values"))      
+from langchain_core.messages import HumanMessage
+
+inputs: AgentState = {"messages": [HumanMessage(content="Add 40 + 12")]}
+print_stream(app.stream(inputs, stream_mode="values"))
